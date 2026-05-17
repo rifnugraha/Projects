@@ -12,6 +12,7 @@ export default function Home() {
   const [deck, setDeck] = useState<Project[]>(projects);
   const isAnimating = useRef(false);
 
+  // Navigasi Maju (Project Selanjutnya)
   const handleNextCard = () => {
     if (isAnimating.current || selectedProject) return;
     isAnimating.current = true;
@@ -28,6 +29,7 @@ export default function Home() {
     }, 500);
   };
 
+  // Navigasi Mundur (Project Sebelumnya)
   const handlePrevCard = () => {
     if (isAnimating.current || selectedProject) return;
     isAnimating.current = true;
@@ -44,17 +46,38 @@ export default function Home() {
     }, 500);
   };
 
+  // Navigasi Mouse / Trackpad Laptop
   const handleWheel = (e: React.WheelEvent) => {
     if (isAnimating.current || selectedProject) return;
-    if (e.deltaY < -20) handlePrevCard();
-    else if (e.deltaY > 20) handleNextCard();
+    if (e.deltaY < -20) {
+      handlePrevCard();
+    } else if (e.deltaY > 20) {
+      handleNextCard();
+    }
   };
+
+  // Navigasi Keyboard Laptop
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedProject) return;
+      if (e.key === "ArrowDown" || e.key === " ") {
+        e.preventDefault();
+        handleNextCard();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        handlePrevCard();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedProject]);
 
   return (
     <div
       onWheel={handleWheel}
       className={`${theme === "dark" ? "dark bg-[#111014]" : "bg-[#f0f4f5]"} transition-colors duration-700 min-h-screen relative overflow-hidden flex items-center justify-center select-none`}
     >
+      {/* Saklar Pengubah Tema */}
       <ThemeToggle
         theme={theme}
         toggle={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -109,11 +132,15 @@ export default function Home() {
                 opacity: opacity,
               }}
               transition={{ type: "spring", stiffness: 120, damping: 20 }}
+              // EMULATOR SWIPE HP
               drag={isMain ? "y" : false}
               dragConstraints={{ top: 0, bottom: 0 }}
               onDragEnd={(e, info) => {
-                if (info.offset.y < -50) handleNextCard();
-                else if (info.offset.y > 50) handlePrevCard();
+                if (info.offset.y < -50) {
+                  handleNextCard();
+                } else if (info.offset.y > 50) {
+                  handlePrevCard();
+                }
               }}
               className={`absolute w-full h-[440px] sm:h-[470px] origin-center ${
                 isMain
@@ -129,7 +156,6 @@ export default function Home() {
                 }}
                 className="w-full h-full"
               >
-                {/* FIX: Mempassing data state theme ke dalam ProjectCard */}
                 <ProjectCard
                   project={project}
                   isActive={isMain}
@@ -141,23 +167,35 @@ export default function Home() {
         })}
       </div>
 
-      {/* Swipe for More */}
+      {/* FIX INDIKATOR: Swipe for More
+          - HP/Mobile: Posisinya di atas melayang (top-24) dengan panah menunjuk ke bawah mengarah ke kartu.
+          - Laptop/PC: Otomatis bergeser ke bawah (sm:bottom-6) dengan panah normal di dasar layar.
+      */}
       <AnimatePresence>
         {!selectedProject && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.4 }}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5 pointer-events-none z-40 text-center"
+            className="absolute top-24 sm:top-auto sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5 pointer-events-none z-40 text-center"
           >
+            {/* Panah HP (Hanya muncul di mobile, letaknya di atas tulisan) */}
             <span
-              className={`${theme === "dark" ? "text-white/20" : "text-black/30"} text-[10px] font-black tracking-[0.3em] uppercase drop-shadow-sm`}
+              className={`${theme === "dark" ? "text-white/10" : "text-black/20"} text-xs font-light block sm:hidden mb-0.5`}
+            >
+              ↓
+            </span>
+
+            <span
+              className={`${theme === "dark" ? "text-white/30 dark:text-white/20" : "text-black/30"} text-[10px] font-black tracking-[0.3em] uppercase drop-shadow-sm`}
             >
               swipe for more
             </span>
+
+            {/* Panah Laptop (Hanya muncul di PC/Laptop, letaknya di bawah tulisan) */}
             <span
-              className={`${theme === "dark" ? "text-white/10" : "text-black/20"} text-xs font-light`}
+              className={`${theme === "dark" ? "text-white/20 sm:text-white/10" : "text-black/20"} text-xs font-light hidden sm:block`}
             >
               ↓
             </span>
@@ -165,10 +203,9 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* POP-UP DETAIL */}
+      {/* POP-UP DETAIL MODAL */}
       <AnimatePresence>
         {selectedProject && (
-          /* FIX: Mempassing data state theme ke dalam ProjectDetail */
           <ProjectDetail
             project={selectedProject}
             onClose={() => setSelectedProject(null)}
