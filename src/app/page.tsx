@@ -53,7 +53,7 @@ export default function Home() {
   return (
     <div
       onWheel={handleWheel}
-      className={`${theme === "dark" ? "dark bg-[#111014]" : "bg-[#8da0a3]"} transition-colors duration-700 min-h-screen relative overflow-hidden flex items-center justify-center select-none`}
+      className={`${theme === "dark" ? "dark bg-[#111014]" : "bg-[#f0f4f5]"} transition-colors duration-700 min-h-screen relative overflow-hidden flex items-center justify-center select-none`}
     >
       <ThemeToggle
         theme={theme}
@@ -109,16 +109,11 @@ export default function Home() {
                 opacity: opacity,
               }}
               transition={{ type: "spring", stiffness: 120, damping: 20 }}
-              // SETINGAN GESTUR DRAG
               drag={isMain ? "y" : false}
               dragConstraints={{ top: 0, bottom: 0 }}
               onDragEnd={(e, info) => {
-                // FIX KALIBRASI: Diubah koordinat deteksinya biar pas murni mengikuti jempol
-                if (info.offset.y < -50) {
-                  handleNextCard();
-                } else if (info.offset.y > 50) {
-                  handlePrevCard();
-                }
+                if (info.offset.y < -50) handleNextCard();
+                else if (info.offset.y > 50) handlePrevCard();
               }}
               className={`absolute w-full h-[440px] sm:h-[470px] origin-center ${
                 isMain
@@ -134,7 +129,12 @@ export default function Home() {
                 }}
                 className="w-full h-full"
               >
-                <ProjectCard project={project} isActive={isMain} />
+                {/* FIX: Mempassing data state theme ke dalam ProjectCard */}
+                <ProjectCard
+                  project={project}
+                  isActive={isMain}
+                  theme={theme}
+                />
               </div>
             </motion.div>
           );
@@ -151,19 +151,28 @@ export default function Home() {
             transition={{ duration: 0.4 }}
             className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5 pointer-events-none z-40 text-center"
           >
-            <span className="text-[10px] font-black tracking-[0.3em] text-white/30 uppercase drop-shadow-sm">
+            <span
+              className={`${theme === "dark" ? "text-white/20" : "text-black/30"} text-[10px] font-black tracking-[0.3em] uppercase drop-shadow-sm`}
+            >
               swipe for more
             </span>
-            <span className="text-white/20 text-xs font-light">↓</span>
+            <span
+              className={`${theme === "dark" ? "text-white/10" : "text-black/20"} text-xs font-light`}
+            >
+              ↓
+            </span>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* POP-UP DETAIL */}
       <AnimatePresence>
         {selectedProject && (
+          /* FIX: Mempassing data state theme ke dalam ProjectDetail */
           <ProjectDetail
             project={selectedProject}
             onClose={() => setSelectedProject(null)}
+            theme={theme}
           />
         )}
       </AnimatePresence>
