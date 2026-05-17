@@ -25,7 +25,7 @@ export default function Home() {
 
     setTimeout(() => {
       isAnimating.current = false;
-    }, 500); // Dipercepat sedikit biar terasa makin responsif
+    }, 500);
   };
 
   const handlePrevCard = () => {
@@ -44,7 +44,6 @@ export default function Home() {
     }, 500);
   };
 
-  // Kunci navigasi wheel mouse laptop
   const handleWheel = (e: React.WheelEvent) => {
     if (isAnimating.current || selectedProject) return;
     if (e.deltaY < -20) handlePrevCard();
@@ -52,7 +51,6 @@ export default function Home() {
   };
 
   return (
-    // FIX HP: Kelas 'touch-none' dihapus total agar sensor layar HP aktif kembali secara natural
     <div
       onWheel={handleWheel}
       className={`${theme === "dark" ? "dark bg-[#111014]" : "bg-[#8da0a3]"} transition-colors duration-700 min-h-screen relative overflow-hidden flex items-center justify-center select-none`}
@@ -99,11 +97,6 @@ export default function Home() {
           }
 
           return (
-            /* FIX SOLUSI TOTAL: 
-               - Kita hilangkan efek filter blur() berat yang bikin HP ngelag parah.
-               - Kita pasang fitur drag="y" dari Framer Motion khusus untuk kartu utama (isMain) 
-                 agar jarimu bisa mengusap, melempar, atau menggeser kartu secara instan di HP.
-            */
             <motion.div
               key={project.id}
               style={{ zIndex }}
@@ -116,16 +109,14 @@ export default function Home() {
                 opacity: opacity,
               }}
               transition={{ type: "spring", stiffness: 120, damping: 20 }}
-              // FITUR GESTUR HP BARU (LANCAR & ENTENG):
-              drag={isMain ? "y" : false} // Hanya kartu paling depan yang bisa di-drag vertikal
-              dragConstraints={{ top: 0, bottom: 0 }} // Kartu mental balik ke tengah kalau dilepas
+              // SETINGAN GESTUR DRAG
+              drag={isMain ? "y" : false}
+              dragConstraints={{ top: 0, bottom: 0 }}
               onDragEnd={(e, info) => {
-                // Jika user mengusap ke atas sejauh lebih dari 50px -> ganti kartu selanjutnya
+                // FIX KALIBRASI: Diubah koordinat deteksinya biar pas murni mengikuti jempol
                 if (info.offset.y < -50) {
                   handleNextCard();
-                }
-                // Jika user mengusap ke bawah sejauh lebih dari 50px -> balik ke kartu sebelumnya
-                else if (info.offset.y > 50) {
+                } else if (info.offset.y > 50) {
                   handlePrevCard();
                 }
               }}
@@ -135,10 +126,8 @@ export default function Home() {
                   : "pointer-events-none"
               }`}
             >
-              {/* Pemicu klik detail: Kita pisahkan agar tidak sengaja terpicu pas kamu lagi nge-swipe */}
               <div
-                onClick={(e) => {
-                  // Mencegah klik terpicu kalau user sebenarnya niatnya cuma nge-drag/swipe
+                onClick={() => {
                   if (isMain && !isAnimating.current) {
                     setSelectedProject(project);
                   }
